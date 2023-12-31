@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "478436791531",
+    "project_id": "newapp-50da2",
+    "storage_bucket": "newapp-50da2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:478436791531:android:35c7db2fd62161a338daae",
+        "android_client_info": {
+          "package_name": "com.theftguard"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDnbWsE7ZxXqCAwAH6q2O4xY55HUQoZN7g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
