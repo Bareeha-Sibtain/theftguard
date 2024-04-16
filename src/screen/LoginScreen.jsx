@@ -18,18 +18,18 @@ const LoginScreen = ({navigation}) => {
   const handleLogin = () => {
     // Perform validation and registration logic
     // alert('Login button pressed!');
-    navigation.navigate("Home")
+    
     auth()
     .signInWithEmailAndPassword(email, password)
     .then(() => {
-      Alert('Logged in!');
-      
+      Alert.alert('Success','Logged in!');
+      navigation.navigate("Home")
     })
     .catch(error => {
       console.log(error);
   
       if (error.code === 'credential is incorrect') {
-        Alert('The email address or password is invalid!');
+        Alert.alert('Error','The email address or password is invalid!');
       }
   
       console.error(error);
@@ -61,7 +61,7 @@ const LoginScreen = ({navigation}) => {
 
         <TouchableOpacity
           style={styles.registerButton}
-          onPress={() => handleLogin()}>
+          onPress={() => handleLogin({navigation})}>
           <Text style={styles.registerButtonText}>Login</Text>
         </TouchableOpacity>
         <TouchableOpacity>

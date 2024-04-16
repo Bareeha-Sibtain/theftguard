@@ -10,6 +10,7 @@ import {
   Text,
   View,
   Button,
+  Alert,
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
 
@@ -21,24 +22,25 @@ const SignupScreen = ({navigation}) => {
   // const [address, setAddress] = useState('');
 
 
-  const handleRegister = () => {
+  const handleRegister = ({navigation}) => {
 
-    console.log("Create user button");
+    
     auth()
     .createUserWithEmailAndPassword(email, password)
     .then(() => {
-      console.log('User account created & signed in!');
+      Alert.alert('Success','User account created & signed in!');
+      navigation.navigate('Home')
     })
     .catch(error => {
       if (error.code === 'auth/email-already-in-use') {
-        console.log('That email address is already in use!');
+        Alert.alert('Error','This Email is already in use')
       }
   
       if (error.code === 'auth/invalid-email') {
-        console.log('That email address is invalid!');
+        Alert.alert('Error','That email address is invalid!');
       }
   
-      console.error(error);
+      
     });
   }
   
@@ -69,7 +71,7 @@ const SignupScreen = ({navigation}) => {
        
         <TouchableOpacity
           style={styles.registerButton}
-          onPress={() => handleRegister() }>
+          onPress={() => handleRegister({navigation}) }>
           <Text style={styles.registerButtonText}>REGISTER</Text>
         </TouchableOpacity>
         <TouchableOpacity>
