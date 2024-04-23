@@ -1,4 +1,4 @@
-import React, {useState, useEff} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   SafeAreaView,
   ScrollView,
@@ -10,37 +10,51 @@ import {
   Alert,
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
-
 const LoginScreen = ({navigation}) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [initializing, setInitializing] = useState(true)
+  const [user, setUser] = useState()
 
-  const handleLogin = () => {
-    // Perform validation and registration logic
-    // alert('Login button pressed!');
-    
+
+  // Handle user state changes
+  function onAuthStateChanged(user) {
+    setUser(user);
+    if (initializing) setInitializing(false);
+  }
+
+  useEffect(()=>{
+    const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
+    return subscriber; // unsubscribe on unmount
+  },[])
+
+
+  if (initializing) return null;
+
+  const handleLogin = () => { 
     auth()
     .signInWithEmailAndPassword(email, password)
     .then(() => {
       Alert.alert('Success','Logged in!');
-      navigation.navigate("Home")
+      if(user){
+        navigation.navigate("Drawer",{screen:"Home"})
+      }
     })
     .catch(error => {
-      console.log(error);
-  
       if (error.code === 'credential is incorrect') {
         Alert.alert('Error','The email address or password is invalid!');
       }
-  
-      console.error(error);
     });
   };
+
+
+  
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>REGISTER</Text>
+          <Text style={styles.logoText}>Login</Text>
         </View>
         <TextInput
           style={styles.input}
