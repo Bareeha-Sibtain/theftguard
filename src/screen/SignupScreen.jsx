@@ -1,5 +1,5 @@
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import React, {useEffect, useState} from 'react';
 import {
   SafeAreaView,
@@ -15,36 +15,38 @@ import {
 import auth from '@react-native-firebase/auth';
 
 const SignupScreen = ({navigation}) => {
-  const [initializing, setInitializing] = useState(true)
+  const [initializing, setInitializing] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  // const [confirmPassword, setConfirmPassword] = useState('');
-  // const [address, setAddress] = useState('');
+  const [name, setName] = useState(''); // State for storing the user's name
 
-
-  const handleRegister = ({navigation}) => {
-
-    
+  const handleRegister = () => {
     auth()
-    .createUserWithEmailAndPassword(email, password)
-    .then(() => {
-      Alert.alert('Success','User account created & signed in!');
-      navigation.navigate('Home')
-    })
-    .catch(error => {
-      if (error.code === 'auth/email-already-in-use') {
-        Alert.alert('Error','This Email is already in use')
-      }
-  
-      if (error.code === 'auth/invalid-email') {
-        Alert.alert('Error','That email address is invalid!');
-      }
-  
-      
-    });
+      .createUserWithEmailAndPassword(email, password)
+      .then((userCredential) => {
+        // Update the user profile with the name provided
+        return userCredential.user.updateProfile({
+          displayName: name
+        });
+      })
+      .then(() => {
+        Alert.alert('Success', 'User account created & signed in!');
+        setEmail('');
+        setPassword('');
+        setName('');
+        navigation.navigate("Drawer", { screen: "Home" });
+      })
+      .catch(error => {
+        if (error.code === 'auth/email-already-in-use') {
+          Alert.alert('Error', 'This Email is already in use');
+        } else if (error.code === 'auth/invalid-email') {
+          Alert.alert('Error', 'That email address is invalid!');
+        } else {
+          Alert.alert('Error', error.message);
+        }
+      });
   }
   
-     
 
   return (
     <SafeAreaView style={styles.container}>
@@ -54,11 +56,20 @@ const SignupScreen = ({navigation}) => {
         </View>
         <TextInput
           style={styles.input}
+          placeholder="Name"
+          value={name}
+          onChangeText={setName}
+          autoCapitalize="words"
+          placeholderTextColor="#000"
+        />
+
+        <TextInput
+          style={styles.input}
           placeholder="Email / Username"
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
-          placeholderTextColor="#000" 
+          placeholderTextColor="#000"
         />
         <TextInput
           style={styles.input}
@@ -66,20 +77,19 @@ const SignupScreen = ({navigation}) => {
           value={password}
           onChangeText={setPassword}
           secureTextEntry
-          placeholderTextColor="#000" 
+          placeholderTextColor="#000"
         />
-       
+
         <TouchableOpacity
           style={styles.registerButton}
-          onPress={() => handleRegister({navigation}) }>
+          onPress={() => handleRegister({navigation})}>
           <Text style={styles.registerButtonText}>REGISTER</Text>
         </TouchableOpacity>
         <TouchableOpacity>
           <Text style={styles.loginText}>Already have an account? Login</Text>
         </TouchableOpacity>
 
-        <Button title='Go Login' onPress={() => navigation.navigate('Login')}  />
-
+        <Button title="Go Login" onPress={() => navigation.navigate('Login')} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -95,7 +105,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    
   },
   logoContainer: {
     marginBottom: 30,
@@ -114,8 +123,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     backgroundColor: '#fff',
-    color: "#000",
-    
+    color: '#000',
   },
   registerButton: {
     backgroundColor: '#4CAF50',

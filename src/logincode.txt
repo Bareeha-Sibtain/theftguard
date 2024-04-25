@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   SafeAreaView,
   ScrollView,
@@ -10,54 +10,51 @@ import {
   Alert,
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
-import { useUser } from '../context/userContext';  // Make sure the path is correct
-import { useNavigation } from '@react-navigation/native';
+import { useUser } from '../context/userContext';
 
-const LoginScreen = () => {
+
+const LoginScreen = ({navigation}) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [initializing, setInitializing] = useState(true);
-  const { setUser } = useUser();  // Correctly using setUser from context
-  const navigation = useNavigation()
+  const [initializing, setInitializing] = useState(true)
+  const [user, setUser] = useState()
+  const {setUsers} = useUser()
+  console.log(user);
+
 
   // Handle user state changes
   function onAuthStateChanged(user) {
-    setUser(user);  // Set user in context right here
+    setUser(user);
     if (initializing) setInitializing(false);
   }
 
-  useEffect(() => {
+  useEffect(()=>{
     const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
     return subscriber; // unsubscribe on unmount
-  }, []);
+  },[])
 
-  if (initializing) return null;  // Loading or splash screen should be here
 
-  const handleLogin = () => {
-    if(email === '' || password === ''){
-      Alert.alert("Error", "Please Fill All the Inputs")
-    }else{
-      auth()
-      .signInWithEmailAndPassword(email, password)
-      .then(() => {
-        Alert.alert('Success', 'Logged in!');
-        setEmail('')
-        setPassword('')
-        navigation.navigate("Drawer", { screen: "Home" });
-      })
-      .catch(error => {
-        // Check the correct error codes and handle them
-        if (error.code === 'auth/invalid-email') {
-          Alert.alert('Error', 'The email address or password is invalid!');
-        } else if (error.code === 'auth/wrong-password') {
-          Alert.alert('Error', 'The password is incorrect!');
-        } else {
-          Alert.alert('Error', error.message);  // General error
-        }
-      });
-    }
+  if (initializing) return null;
+
+  const handleLogin = () => { 
+    auth()
+    .signInWithEmailAndPassword(email, password)
+    .then(() => {
+      Alert.alert('Success','Logged in!');
+      if(user){
+        navigation.navigate("Drawer",{screen:"Home"})
+        setUsers(user)
+      }
+    })
+    .catch(error => {
+      if (error.code === 'credential is incorrect') {
+        Alert.alert('Error','The email address or password is invalid!');
+      }
+    });
   };
 
+
+  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -71,7 +68,7 @@ const LoginScreen = () => {
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
-          placeholderTextColor="#000"
+          placeholderTextColor="#000" 
         />
         <TextInput
           style={styles.input}
@@ -79,16 +76,18 @@ const LoginScreen = () => {
           value={password}
           onChangeText={setPassword}
           secureTextEntry
-          placeholderTextColor="#000"
+          placeholderTextColor="#000" 
         />
+
         <TouchableOpacity
           style={styles.registerButton}
-          onPress={handleLogin}>
+          onPress={() => handleLogin({navigation})}>
           <Text style={styles.registerButtonText}>Login</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
-          <Text style={styles.loginText}>Don't have an Account?</Text>
+        <TouchableOpacity>
+          <Text style={styles.loginText} onPress={() => navigation.navigate('Signup')}>Don't have an Account?</Text>
         </TouchableOpacity>
+        
       </ScrollView>
     </SafeAreaView>
   );
@@ -123,6 +122,10 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: '#fff',
     color: '#000',
+    
+  },
+  placeholder:{
+    color: "#000"
   },
   registerButton: {
     backgroundColor: '#4CAF50',
