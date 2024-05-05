@@ -8,6 +8,10 @@ import { Image, TouchableOpacity } from 'react-native';
 const Drawer = createDrawerNavigator();
 import auth from '@react-native-firebase/auth';
 import { useNavigation } from '@react-navigation/native';
+import ChatScreen from '../screen/ChatScreen';
+import ChatListScreen from '../screen/ChatListScreen';
+import ChatStackNavigator from './ChatStackNavigator';
+import HistoryScreen from '../screen/HistoryScreen';
 
 const DrawerNavigator = () => {
   const navigation = useNavigation()
@@ -44,6 +48,8 @@ const DrawerNavigator = () => {
     }}
     >
       <Drawer.Screen name="Home" component={HomeScreen} />
+      <Drawer.Screen name="Chats" component={ChatStackNavigator} />
+      <Drawer.Screen name="History" component={HistoryScreen} />
       <Drawer.Screen name="Setting" component={SettingScreen} />
     </Drawer.Navigator>
   );

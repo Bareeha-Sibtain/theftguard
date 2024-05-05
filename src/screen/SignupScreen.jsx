@@ -1,6 +1,6 @@
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   SafeAreaView,
   ScrollView,
@@ -13,28 +13,48 @@ import {
   Alert,
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 
 const SignupScreen = ({navigation}) => {
   const [initializing, setInitializing] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState(''); // State for storing the user's name
+  const [phone, setPhone] = useState(''); // State for storing the user's phone
+  const [location, setLocation] = useState(''); // State for storing the user's phone
 
   const handleRegister = () => {
     auth()
       .createUserWithEmailAndPassword(email, password)
-      .then((userCredential) => {
+      .then(userCredential => {
         // Update the user profile with the name provided
-        return userCredential.user.updateProfile({
-          displayName: name
-        });
+        userCredential.user
+          .updateProfile({
+            displayName: name,
+          })
+          .then(() => {
+            // User profile updated successfully
+            // Now add a new document in Firestore
+            const userRef = firestore()
+              .collection('users')
+              .doc(userCredential.user.uid);
+            return userRef.set({
+              name: name,
+              email: email,
+              phone: phone,
+              location:location,
+              createdAt: firestore.FieldValue.serverTimestamp(), // Adds a server-side timestamp
+            });
+          });
       })
       .then(() => {
         Alert.alert('Success', 'User account created & signed in!');
         setEmail('');
         setPassword('');
         setName('');
-        navigation.navigate("Drawer", { screen: "Home" });
+        setPhone('');
+        setLocation('')
+        navigation.navigate('Drawer', {screen: 'Home'});
       })
       .catch(error => {
         if (error.code === 'auth/email-already-in-use') {
@@ -45,8 +65,7 @@ const SignupScreen = ({navigation}) => {
           Alert.alert('Error', error.message);
         }
       });
-  }
-  
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -77,6 +96,20 @@ const SignupScreen = ({navigation}) => {
           value={password}
           onChangeText={setPassword}
           secureTextEntry
+          placeholderTextColor="#000"
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Phone"
+          value={phone}
+          onChangeText={setPhone}
+          placeholderTextColor="#000"
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Location"
+          value={location}
+          onChangeText={setLocation}
           placeholderTextColor="#000"
         />
 

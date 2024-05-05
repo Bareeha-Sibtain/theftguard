@@ -1,34 +1,134 @@
-// create a component
-const HomeScreen: React.FC = () => {
-  
-  return (
-    <View style={styles.container}>  
-      <MapView
-        provider={PROVIDER_GOOGLE}
-        style={styles.map}
-        initialRegion={{
-          latitude: 24.860966,
-          longitude: 66.990501,
-          latitudeDelta: 0.4,
-          longitudeDelta: 0.4,
-        }}
-      />
-    </View>
-  );
- 
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { useUser } from '../context/userContext';
+import firebase from '@react-native-firebase/database';
+import messaging from '@react-native-firebase/messaging';
+import PushNotification from 'react-native-push-notification';
+
+const HomeScreen = ({ navigation }) => {
+    const { user } = useUser();
+    const [notification, setNotification] = useState(null);
+
+    useEffect(() => {
+        PushNotification.configure({
+            onNotification: function(notification) {
+                setNotification(notification); // Update the state with the received notification
+            },
+            // Other options if needed
+        });
+
+        const reference = firebase().ref('Device');
+        const onDataChange = snapshot => {
+            const fetchData = snapshot.val();
+            Object.keys(fetchData).forEach(homeKey => {
+                const motionValue = fetchData[homeKey].motion?.value;
+                const soundValue = fetchData[homeKey].sound?.value;
+                if (motionValue === 1 || soundValue === 1) {
+                    sendNotification(homeKey);
+                }
+            });
+        };
+
+        reference.on('value', onDataChange);
+        return () => reference.off('value', onDataChange);
+    }, []);
+
+    const sendNotification = async (homeKey) => {
+        const enabled = await requestUserPermission();
+        if (enabled) {
+            PushNotification.localNotification({
+                channelId: "theftguard1234",
+                title: "Alert",
+                message: `Motion or sound detected at ${homeKey}`,
+                playSound: true,
+                soundName: 'default',
+            });
+        }
+    };
+
+    const requestUserPermission = async () => {
+        const authStatus = await messaging().requestPermission();
+        return (
+            authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+            authStatus === messaging.AuthorizationStatus.PROVISIONAL
+        );
+    };
+
+    return (
+        <View style={styles.container}>
+            <Text style={styles.textColor}>
+                Welcome! {user ? user.displayName : 'Guest'}
+            </Text>
+            {notification && (
+                <View style={styles.notificationContainer}>
+                    <Text style={styles.notificationTitle}>Notification Received:</Text>
+                    <Text style={styles.notificationMessage}>{notification.title}</Text>
+                    <Text>{notification.message}</Text>
+                    <View style={styles.btnContainer}>
+                    <TouchableOpacity style={styles.btnCancel}>
+                      <Text style={styles.btnColor}>Dismiss</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.btnOk}><Text style={styles.btnColor}>Accept</Text></TouchableOpacity>
+                    </View>
+                </View>
+            )}
+        </View>
+    );
 };
 
-// define your styles
 const styles = StyleSheet.create({
     container: {
-      ...StyleSheet.absoluteFillObject,
-      justifyContent: 'flex-end',
+        flex: 1,
+        backgroundColor: '#fff',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    textColor: {
+        color: 'red',
+    },
+    notificationContainer: {
+      width:300,
+      height:150,
+        marginTop: 20,
+        padding: 10,
+        backgroundColor: '#e0e0e0',
+        borderRadius: 10,
+    },
+    notificationTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    notificationMessage: {
+        fontSize: 14,
+    },
+    btnContainer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
       alignItems: 'center',
+      marginTop:10
     },
-    map: {
-      ...StyleSheet.absoluteFillObject,
+    btnCancel:{
+      width:60,
+      height:30,
+      backgroundColor: '#444',
+      marginLeft:15,
+      padding:5,
+      borderRadius: 2,
+      textAlign: 'center'
     },
-   });
+    btnOk:{
+      width:60,
+      height:30,
+      textAlign: 'center',
+      backgroundColor: '#0000FF',
+      marginLeft:15,
+      color: '#fff',
+      padding:5,
+      borderRadius: 2
+    },
+    btnColor:{
+      color: '#FFF'
+    }
+});
 
-//make this component available to the app
-export default HomeScreen;     
+export default HomeScreen;
