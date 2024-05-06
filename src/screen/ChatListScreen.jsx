@@ -6,24 +6,36 @@ import auth from '@react-native-firebase/auth';
 const ChatListScreen = ({ navigation }) => {
     const [chats, setChats] = useState([]);
     const currentUser = auth().currentUser;
+ console.log(chats);
+    
+
 
     useEffect(() => {
-        if (currentUser) {
-            const chatsRef = firebase().ref('chats').orderByChild('members/' + currentUser.uid).equalTo(true);
-            chatsRef.on('value', snapshot => {
-                const chatsArray = [];
-                snapshot.forEach(childSnapshot => {
-                    chatsArray.push({
-                        key: childSnapshot.key,
-                        ...childSnapshot.val()
+        const unsubscribe = auth().onAuthStateChanged(user => {
+            if (user) {
+                const chatsRef = firebase().ref('chats');
+                chatsRef.on('value', snapshot => {
+                    const chatsArray = [];
+                    snapshot.forEach(childSnapshot => {
+                        const chat = childSnapshot.val();
+                        if (chat.memberId1 === user.uid || chat.memberId2 === user.uid) {
+                            chatsArray.push({
+                                key: childSnapshot.key,
+                                ...chat
+                            });
+                        }
                     });
+                    setChats(chatsArray);
                 });
-                setChats(chatsArray);
-            });
-
-            return () => chatsRef.off('value');
-        }
-    }, [currentUser]);
+    
+                // Cleanup function to unsubscribe from changes on unmount
+                return () => chatsRef.off('value');
+            }
+        });
+    
+        return () => unsubscribe(); // Cleanup auth state listener
+    }, []);
+    
 
     return (
         <FlatList

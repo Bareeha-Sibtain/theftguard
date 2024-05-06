@@ -48,7 +48,7 @@ const DrawerNavigator = () => {
     }}
     >
       <Drawer.Screen name="Home" component={HomeScreen} />
-      <Drawer.Screen name="Chats" component={ChatStackNavigator} />
+      <Drawer.Screen name="Chat" component={ChatScreen} />
       <Drawer.Screen name="History" component={HistoryScreen} />
       <Drawer.Screen name="Setting" component={SettingScreen} />
     </Drawer.Navigator>

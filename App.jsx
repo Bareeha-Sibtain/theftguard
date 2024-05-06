@@ -15,31 +15,6 @@ const Stack = createNativeStackNavigator();
 
 import PushNotification from 'react-native-push-notification';
 
-PushNotification.configure({
-  // (required) Called when a remote or local notification is opened or received
-  onNotification: function(notification) {
-    console.log('NOTIFICATION:', notification);
-  },
-  // Android only: GCM or FCM Sender ID
-  senderID: '478436791531',
-  popInitialNotification: true,
-  requestPermissions: true,
-});
-
-// Define a channel
-PushNotification.createChannel(
-  {
-    channelId: "theftguard1234", // provide a unique ID for the channel
-    channelName: "theftguard", // provide a channel name
-    channelDescription: "To detect any robber", // provide a channel description
-    playSound: true,
-    soundName: "default", // plays a sound. Set to `customsound.mp3` in the `raw` folder or leave as 'default' for the default sound
-    importance: 4, // importance and visibility go hand in hand
-    vibrate: true, // whether to vibrate
-  },
-  (created) => console.log(`CreateChannel returned '${created}'`) // optional callback returns whether the channel was created successfully
-);
-
 
 const AuthStack = () => {
 
@@ -55,6 +30,38 @@ const AuthStack = () => {
 };
 
 const App = () => {
+
+  PushNotification.configure({
+    // (required) Called when a remote or local notification is opened or received
+    onNotification: function(notification) {
+      console.log('NOTIFICATION:', notification);
+    },
+    // Android only: GCM or FCM Sender ID
+    senderID: '478436791531',
+    popInitialNotification: true,
+    requestPermissions: true,
+  });
+  
+  // Define a channel
+  const createNotificationChannel = () => {
+    PushNotification.createChannel(
+      {
+        channelId: "theftguard1234", // same as the one you use to send a notification
+        channelName: "Theftguard Notifications", // human-readable name, displayed in settings
+        channelDescription: "A channel to categorise Theftguard alerts", // description of the channel
+        soundName: "default", // the sound name to play
+        importance: 4, // Importance level, similar to importance levels in Android
+        vibrate: true, // Whether to vibrate
+      },
+      (created) => console.log(`CreateChannel returned '${created}'`) // callback returns whether the channel was created successfully
+    );
+  };
+  
+  useEffect(()=>{
+    createNotificationChannel()
+  },[])
+
+  
   return (
     <UserProvider>
       <NavigationContainer>

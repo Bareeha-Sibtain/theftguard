@@ -34,9 +34,9 @@ const NotificationsScreen = () => {
                 renderItem={({ item }) => (
                     <View style={styles.notificationItem}>
                         <Text style={styles.title}>Action: {item.action}</Text>
-                        <Text>Home Key: {item.homeKey}</Text>
-                        <Text>Timestamp: {item.timestamp}</Text>
-                        <Text>User: {item.user}</Text>
+                        <Text style={styles.title}>Home Key: {item.homeKey}</Text>
+                        <Text style={styles.title}>Timestamp: {item.timestamp}</Text>
+                        <Text style={styles.title}>User: {item.user}</Text>
                     </View>
                 )}
                 keyExtractor={item => item.key}
@@ -55,12 +55,13 @@ const styles = StyleSheet.create({
     notificationItem: {
         padding: 10,
         borderBottomWidth: 1,
-        borderBottomColor: '#ddd',
+        borderBottomColor: '#000',
         width: '100%'
     },
     title: {
         fontSize: 16,
-        fontWeight: 'bold'
+        fontWeight: 'bold',
+        color: '#000'
     }
 });
 
