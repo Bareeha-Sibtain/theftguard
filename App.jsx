@@ -5,11 +5,9 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { UserProvider, useUser } from './src/context/userContext';
 import LoginScreen from './src/screen/LoginScreen'
 import SignupScreen from './src/screen/SignupScreen';
-import HomeScreen from './src/screen/HomeScreen';
 import LoadingScreen from './src/screen/LoadingScreen';
 import DrawerNavigator from './src/navigation/DrawerNavigator';
-import { Alert } from 'react-native';
-import ChatScreen from './src/screen/ChatScreen';
+
 
 const Stack = createNativeStackNavigator();
 
@@ -23,8 +21,8 @@ const AuthStack = () => {
 
   return (
     <Stack.Navigator>
-      <Stack.Screen name="Signup" component={SignupScreen} />
-      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Login" component={LoginScreen}  options={{headerShown: false}} />
+      <Stack.Screen name="Signup" component={SignupScreen}  options={{headerShown: false}} />
     </Stack.Navigator>
   );
 };
@@ -44,18 +42,24 @@ const App = () => {
   
   // Define a channel
   const createNotificationChannel = () => {
-    PushNotification.createChannel(
-      {
-        channelId: "theftguard1234", // same as the one you use to send a notification
-        channelName: "Theftguard Notifications", // human-readable name, displayed in settings
-        channelDescription: "A channel to categorise Theftguard alerts", // description of the channel
-        soundName: "default", // the sound name to play
-        importance: 4, // Importance level, similar to importance levels in Android
-        vibrate: true, // Whether to vibrate
-      },
-      (created) => console.log(`CreateChannel returned '${created}'`) // callback returns whether the channel was created successfully
-    );
-  };
+    PushNotification.channelExists("theftguard1234", (exists) => {
+        if (!exists) {
+          PushNotification.createChannel(
+            {
+              channelId: "theftguard1234", // same as the one you use to send a notification
+              channelName: "Theftguard Notifications", // human-readable name, displayed in settings
+              channelDescription: "A channel to categorise Theftguard alerts", // description of the channel
+              soundName: "default", // the sound name to play
+              importance: 4, // Importance level, similar to importance levels in Android
+              vibrate: true, // Whether to vibrate
+            },
+            (created) => console.log(`CreateChannel returned '${created}'`) // callback returns whether the channel was created successfully
+          );
+        }
+    });
+};
+
+
   
   useEffect(()=>{
     createNotificationChannel()

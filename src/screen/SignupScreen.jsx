@@ -11,6 +11,7 @@ import {
   View,
   Button,
   Alert,
+  Image,
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
@@ -70,8 +71,10 @@ const SignupScreen = ({navigation}) => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>REGISTER</Text>
+      <View style={styles.logoContainer}>
+          <Image style={styles.image} source={require('../assets/image/logo.jpeg')} />
+          <Text style={styles.logoText}>TheftGuard</Text>
+          <Text style={styles.logedText}>Register</Text>
         </View>
         <TextInput
           style={styles.input}
@@ -118,11 +121,11 @@ const SignupScreen = ({navigation}) => {
           onPress={() => handleRegister({navigation})}>
           <Text style={styles.registerButtonText}>REGISTER</Text>
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
           <Text style={styles.loginText}>Already have an account? Login</Text>
         </TouchableOpacity>
 
-        <Button title="Go Login" onPress={() => navigation.navigate('Login')} />
+        
       </ScrollView>
     </SafeAreaView>
   );
@@ -143,9 +146,21 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     alignItems: 'center',
   },
-  logoText: {
-    fontSize: 24,
+  image: {
+    width: 200, // Set the width of your image
+    height: 200, // Set the height of your image
+},
+  logedText: {
+    fontSize: 20,
     fontWeight: 'bold',
+    color: '#000',
+    marginTop: 20
+  },
+  logoText:{
+    fontSize: 30,
+    fontFamily: 'cursive',
+    fontWeight: 'bold',
+    color: '#000'
   },
   input: {
     width: '100%',
@@ -159,7 +174,7 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   registerButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#2563EB',
     padding: 15,
     borderRadius: 5,
     alignItems: 'center',
@@ -172,7 +187,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   loginText: {
-    color: 'gray',
+    color: '#2563EB',
     marginTop: 20,
   },
 });

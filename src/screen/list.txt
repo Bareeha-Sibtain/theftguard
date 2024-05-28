@@ -1,0 +1,63 @@
+import React, { useEffect, useState } from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import database from '@react-native-firebase/database';
+import auth from '@react-native-firebase/auth';
+
+const ChatListScreen = ({ navigation }) => {
+  const [chats, setChats] = useState([]);
+  const currentUserId = auth().currentUser.uid;
+
+  useEffect(() => {
+    const chatsRef = database().ref(`users/${currentUserId}/chats`);
+    const onReceiveChats = chatsRef.on('value', snapshot => {
+      const chatList = [];
+      snapshot.forEach(childSnapshot => {
+        chatList.push({
+          key: childSnapshot.key,
+          ...childSnapshot.val()
+        });
+      });
+      setChats(chatList);
+    });
+
+    return () => chatsRef.off('value', onReceiveChats);
+  }, [currentUserId]);
+
+  const navigateToChat = (chatId, userName) => {
+    navigation.navigate('Chat', { chatId, userName });
+  };
+
+  const renderChatItem = ({ item }) => (
+    <TouchableOpacity style={styles.chatItem} onPress={() => navigateToChat(item.chatId, item.userName)}>
+      <Text style={styles.userName}>{item.userName}</Text>
+    </TouchableOpacity>
+  );
+
+  return (
+    <View style={styles.container}>
+      <FlatList
+        data={chats}
+        renderItem={renderChatItem}
+        keyExtractor={item => item.key}
+      />
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    padding: 10,
+  },
+  chatItem: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+  },
+  userName: {
+    fontSize: 18,
+  },
+});
+
+export default ChatListScreen;

@@ -1,31 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Alert, TouchableOpacity, Switch } from 'react-native';
+import { View, Text, StyleSheet, Alert, Switch } from 'react-native';
 import { useUser } from '../context/userContext';
 import firebase from '@react-native-firebase/database';
 import firestore from '@react-native-firebase/firestore';
-import messaging from '@react-native-firebase/messaging';  //Change
 import PushNotification from 'react-native-push-notification';
 
 const HomeScreen = ({ navigation }) => {
     const { user } = useUser();
     const [notification, setNotification] = useState(null);
-    const [systemStatus, setSystemStatus] = useState(0); // change
-
-    const fetchInitialSystemStatus = async () => {
-        try {
-            const homeKey = await fetchHomeKeyForUser(user.uid);
-            if (!homeKey) {
-                Alert.alert('Error', 'No home key found for this user.');
-                return;
-            }
-            const reference = firebase().ref(`Device/${homeKey}`);
-            const snapshot = await reference.once('value');
-            const data = snapshot.val();
-            setSystemStatus(data.system_status === 1);
-        } catch (error) {
-            console.error("Error fetching initial system status:", error);
-        }
-    };
+    const [notifyName, setNotifyName] = useState(''); //change
+    const [notifyLocation, setNotifyLocation] = useState(''); //change
+    const [dataUser, setDataUser] = useState(''); // change
+    const [systemStatus, setSystemStatus] = useState(false); // change
 
     const fetchHomeKeyForUser = async (uid) => {
         try {
@@ -59,103 +45,116 @@ const HomeScreen = ({ navigation }) => {
             console.error("Error updating system status:", error);
         }
     };
-    useEffect(() => {
-        fetchInitialSystemStatus()
-        setUpDeviceListener()
 
-      PushNotification.configure({
-        onNotification: function(notification) {
-        //   console.log("Notification received:", notification);
-          setNotification(notification); // Update the state with the received notification
-        },
-      });
-
-      return () => {
-        const reference = firebase().ref('Device');
-        reference.off('value');
-      };
-
-    }, []);
-
-    const setUpDeviceListener = () => {
-      const reference = firebase().ref('Device');
-      reference.on('value', snapshot => {
-        const fetchData = snapshot.val();
-        Object.keys(fetchData).forEach(homeKey => {
-          const motionValue = fetchData[homeKey].motion?.value;
-          const soundValue = fetchData[homeKey].sound?.value;
-          const deviceLocation = fetchData[homeKey].user.location;
-          const deviceName = fetchData[homeKey].user.name;
-          if(fetchData[homeKey].system_status === 1){
-            
-            if (motionValue === 1) {
-                sendNotification(homeKey, 'motion', deviceLocation, deviceName);
-              }
-              if (soundValue === 1) {
-                sendNotification(homeKey, 'sound', deviceLocation, deviceName);
-              }
-          }
-          
-        });
-      });
-    };
-
-    const sendNotification = (homeKey, detectionType, deviceLocation, deviceName) => {
-      const message = detectionType === 'motion'
-          ? `Motion detected at ${homeKey}. Location: ${deviceLocation}. Name: ${deviceName}`
-          : `Sound detected at ${homeKey}. Location: ${deviceLocation}. Name: ${deviceName}`;
-
-      PushNotification.localNotification({
-        channelId: "theftguard1234",
-        title: "Alert",
-        message: message,
-        playSound: true,
-        soundName: 'default',
-        autoCancel: false
-      });
-    };
-
-    const handleNotificationAction = async (homeKey, action) => {
-        const notificationsRef = firebase().ref('Notifications');
+    const fetchUserDetails = async (userId) => {
         try {
-            await notificationsRef.push({
-                homeKey,
-                action,
-                uid: user ? user.uid : 'null',
-                user: user ? user.displayName : 'Anonymous',
-                timestamp: new Date().toISOString(),
-            });
-            setNotification(null); // Clear notification from state
-        } catch (error) {
-            console.error("Error pushing notification:", error);
-        }
-    
-        // Schedule the 'missed' action after 30 minutes
-        setTimeout(async () => {
-            try {
-                const missedNotification = await notificationsRef.push({
-                    homeKey,
-                    action: 'missed',
-                    user: user ? user.displayName : 'Anonymous',
-                    timestamp: new Date().toISOString(),
-                });
-                console.log('Missed notification scheduled:', missedNotification.key);
-            } catch (error) {
-                console.error("Error pushing missed notification:", error);
+            const userDocument = await firestore().collection('users').doc(userId).get();
+            if (userDocument.exists) {
+                const userData = userDocument.data();
+                if (userData && userData.name) {
+                    setDataUser(userData.name);
+                } else {
+                    console.log("Name not found in user data.");
+                }
+            } else {
+                console.log("No user found with ID:", userId);
             }
-        }, 1800000); // 30 minutes in milliseconds
+        } catch (error) {
+            console.error("Failed to fetch user details:", error);
+            return null;
+        }
     };
-    
+
+    useEffect(() => {
+        if (user) {
+            fetchUserDetails(user.uid).then(userDetails => {
+                if (userDetails && userDetails.location) {
+                    console.log("Location set in state:", userDetails.location);
+                    setUpDeviceListener(userDetails.location);
+                }
+            });
+        }
+
+        const onNotificationReceived = notification => {
+            console.log("Notification received:", notification);
+            setNotification(notification);
+        };
+
+        const pushNotificationConfig = {
+            onNotification: onNotificationReceived
+        };
+
+        PushNotification.configure(pushNotificationConfig);
+
+        return () => {
+            const reference = firebase().ref('Device');
+            reference.off('value');
+        };
+    }, [user]);
+
+    const setUpDeviceListener = (location) => {
+        const reference = firebase().ref('Device');
+        reference.on('value', snapshot => {
+            const fetchData = snapshot.val();
+            Object.keys(fetchData).forEach(homeKey => {
+                const motionValue = fetchData[homeKey].motion?.value;
+                const soundValue = fetchData[homeKey].sound?.value;
+                if (motionValue === 1) {
+                    sendNotification(homeKey, 'motion', location);
+                }
+                if (soundValue === 1) {
+                    sendNotification(homeKey, 'sound', location);
+                }
+            });
+        });
+    };
+
+    const sendNotification = async (homeKey, detectionType, location) => {
+        try {
+            const deviceRef = firebase().ref(`Device/${homeKey}`);
+            const deviceSnapshot = await deviceRef.once('value');
+            const deviceData = deviceSnapshot.val();
+            const deviceName = deviceData && deviceData.user.name ? deviceData.user.name : 'Unknown';
+            const deviceLocation = deviceData && deviceData.location ? deviceData.location : location;
+            setNotifyName(deviceName);
+            setNotifyLocation(deviceLocation);
+
+            const message = detectionType === 'motion'
+                ? `Motion detected at ${homeKey}. \nName: ${deviceName}. \nLocation: ${deviceLocation}`
+                : `Sound detected at ${homeKey}. \nName: ${deviceName}. \nLocation: ${deviceLocation}`;
+
+            PushNotification.localNotification({
+                channelId: "theftguard1234",
+                title: "Alert",
+                message: message,
+                playSound: true,
+                soundName: 'default',
+            });
+        } catch (error) {
+            console.error("Failed to send notification:", error);
+        }
+    };
+
+    const handleNotificationAction = (homeKey, action) => {
+        const notificationsRef = firebase().ref('Notifications');
+        notificationsRef.push({
+            homeKey,
+            action,
+            user: dataUser ? dataUser : 'Anonymous',
+            timestamp: new Date().toISOString(),
+        });
+        setNotification(null);
+    };
 
     return (
         <View style={styles.container}>
             <Text style={styles.textColor}>
-                Welcome! {user ? user.displayName : 'Guest'}
+                Welcome! {dataUser}
             </Text>
             <View style={styles.toggleContainer}>
                 <Text style={styles.toggleLabel}>System Status</Text>
                 <Switch
-                    style={`${styles.togglebutton}`}
+                    style={styles.togglebutton}
                     value={systemStatus}
                     onValueChange={handleToggle}
                 />

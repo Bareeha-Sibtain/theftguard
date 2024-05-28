@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
 import firebase from '@react-native-firebase/database';
 import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 
 const NotificationsScreen = () => {
     const [notifications, setNotifications] = useState([]);
-    const currentUser = auth().currentUser; // Get the currently logged-in user
+    const currentUser = auth().currentUser; // Get the currently logged-in user'
+    const [loading, setLoading] = useState(true)
 
     useEffect(() => {
         if (currentUser) {
@@ -15,11 +17,14 @@ const NotificationsScreen = () => {
             // Listen for updates in the notifications node
             const onValueChange = notificationsRef.on('value', snapshot => {
                 const data = snapshot.val();
+                // console.log(data);
+                
                 const notificationsList = data ? Object.keys(data).map(key => ({
                     ...data[key],
                     key: key
-                })).filter(notification => notification.user === currentUser.displayName) : []; // Filter notifications for the current user by name
+                })).filter(notification => notification.uid === currentUser.uid) : []; // Filter notifications for the current user by name
                 setNotifications(notificationsList);
+                setLoading(false)
             });
 
             // Unsubscribe from the realtime updates when the component unmounts
@@ -29,7 +34,11 @@ const NotificationsScreen = () => {
 
     return (
         <View style={styles.container}>
-            <FlatList
+           {
+            loading ? (
+                <ActivityIndicator size="large" color="#000" />
+            ) : (
+                <FlatList
                 data={notifications}
                 renderItem={({ item }) => (
                     <View style={styles.notificationItem}>
@@ -41,6 +50,8 @@ const NotificationsScreen = () => {
                 )}
                 keyExtractor={item => item.key}
             />
+            )
+           }
         </View>
     );
 };
