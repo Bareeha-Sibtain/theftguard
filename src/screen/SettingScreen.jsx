@@ -43,6 +43,7 @@ const SettingScreen = ({ navigation }) => {
                   onChangeText={setCurrentPassword}
                   secureTextEntry
                   placeholder="Enter your current password"
+                  placeholderTextColor="#000" 
               />
               <Text style={styles.label}>New Password</Text>
               <TextInput
@@ -51,6 +52,7 @@ const SettingScreen = ({ navigation }) => {
                   onChangeText={setNewPassword}
                   secureTextEntry
                   placeholder="Enter your new password"
+                  placeholderTextColor="#000" 
               />
               <Button title="Change Password" onPress={handleChangePassword} />
           </View>

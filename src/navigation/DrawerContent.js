@@ -9,7 +9,7 @@ import auth from '@react-native-firebase/auth';
 
 const DrawerList = [
   { icon: 'home-outline', label: 'Home', navigateTo: 'HomeScreen' },
-  { icon: 'chat', label: 'Chats', navigateTo: 'ChatList' },
+  { icon: 'chat', label: 'Chats', navigateTo: 'Chat' },
   { icon: 'account-group', label: 'History', navigateTo: 'History' },
   { icon: 'account-settings', label: 'Setting', navigateTo: 'Setting' },
 ];

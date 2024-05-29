@@ -45,7 +45,8 @@ const AppStack = () => {
         }}
       />
      
-      <Stack.Screen name='ChatList' component={ChatListScreen} />
+
+      <Stack.Screen name='Chat' component={ChatScreen} />
       <Stack.Screen name='History' component={HistoryScreen} />
       <Stack.Screen name='Setting' component={SettingScreen} />
     </Stack.Navigator>

@@ -9,7 +9,7 @@ import PushNotification from 'react-native-push-notification';
 const HomeScreen = ({ navigation }) => {
     const { user } = useUser();
     const [notification, setNotification] = useState(null);
-    const [systemStatus, setSystemStatus] = useState(0); // change
+    const [systemStatus, setSystemStatus] = useState(false); // change
 
     const fetchInitialSystemStatus = async () => {
         try {
@@ -19,9 +19,10 @@ const HomeScreen = ({ navigation }) => {
                 return;
             }
             const reference = firebase().ref(`Device/${homeKey}`);
-            const snapshot = await reference.once('value');
-            const data = snapshot.val();
-            setSystemStatus(data.system_status === 1);
+            reference.on('value', snapshot => {
+                const data = snapshot.val();
+                setSystemStatus(data.system_status === 1);
+            });
         } catch (error) {
             console.error("Error fetching initial system status:", error);
         }
